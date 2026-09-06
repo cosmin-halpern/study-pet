@@ -1,7 +1,8 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { checkIn } from '@/app/actions';
-import { SPECIES, speciesOf, type SpeciesId } from '@/lib/creatures';
+import { SPECIES, speciesOf, lvOf, type SpeciesId } from '@/lib/creatures';
+import { Banner } from './Banner';
 
 type CheckInResult = {
   ok: boolean;
@@ -20,16 +21,28 @@ export function CheckIn({
 }) {
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<SpeciesId | null>(null);
-  const [result, setResult] = useState<CheckInResult | null>(null);
+  const [result, setResult] = useState<(CheckInResult & { species: SpeciesId }) | null>(null);
 
   function submit() {
     if (!selected) return;
+    const species = selected;
     setResult(null);
     startTransition(async () => {
-      const r = (await checkIn(selected)) as CheckInResult;
-      setResult(r);
+      const r = (await checkIn(species)) as CheckInResult;
+      setResult({ ...r, species });
     });
   }
+
+  // "Caught Sprig!" on a new catch, "Cedar!" on an evolution — quiet
+  // day-to-day feeding doesn't flash, only the moments worth celebrating.
+  const bannerMessage = (() => {
+    if (!result?.ok || result.days === undefined) return null;
+    const sp = speciesOf(result.species);
+    if (result.caught) return result.shiny ? `✨ Shiny ${sp.names[0]}!` : `Caught ${sp.names[0]}!`;
+    const prevLevel = lvOf(result.days - 1);
+    const newLevel = lvOf(result.days);
+    return newLevel > prevLevel ? `${sp.names[newLevel]}!` : null;
+  })();
 
   const buttonLabel = disabled
     ? 'Already checked in today'
@@ -81,9 +94,11 @@ export function CheckIn({
       )}
       {result?.ok && (
         <p className="mt-2 text-center text-sm text-paper/70">
-          {result.caught ? `Caught a new pet!${result.shiny ? ' ✨ Shiny!' : ''}` : `Fed — day ${result.days}.`}
+          {speciesOf(result.species).stage} — day {result.days}.
         </p>
       )}
+
+      <Banner message={bannerMessage} />
     </div>
   );
 }
