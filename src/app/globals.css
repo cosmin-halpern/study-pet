@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #16283c;
+  --gold: #b0812a;
+  --paper: #f0f2ee;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-gold: var(--gold);
+  --color-paper: var(--paper);
+  --font-sans: var(--font-karla);
+  --font-display: var(--font-newsreader);
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--navy);
+  font-family: var(--font-sans), sans-serif;
+  background-image:
+    linear-gradient(rgba(22, 40, 60, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 40, 60, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
