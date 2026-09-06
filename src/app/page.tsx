@@ -4,6 +4,7 @@ import { Tank } from '@/components/Tank';
 import { CheckIn } from '@/components/CheckIn';
 import { Stats } from '@/components/Stats';
 import { Roster } from '@/components/Roster';
+import { EnablePush } from '@/components/EnablePush';
 
 export default async function Home() {
   const game = await loadGame();
@@ -36,6 +37,8 @@ export default async function Home() {
       />
 
       <Roster activeId={activeId} pets={pets} health={health} />
+
+      <EnablePush />
     </main>
   );
 }
