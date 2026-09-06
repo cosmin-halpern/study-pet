@@ -1,4 +1,5 @@
 import { Pet } from './Pet';
+import { EditableLabel } from './EditableLabel';
 import { speciesOf, lvOf, moodOf, colorOf, MOOD_COPY, THRESH, type SpeciesId } from '@/lib/creatures';
 
 // Diffs two Postgres-sourced date strings (today, last_check) — never the
@@ -24,6 +25,7 @@ export function Tank({
   health,
   today,
   lastCheck,
+  labels,
   children,
 }: {
   activeId: SpeciesId;
@@ -31,9 +33,11 @@ export function Tank({
   health: number;
   today: string;
   lastCheck: string | null;
+  labels: Record<SpeciesId, string>;
   children?: React.ReactNode;
 }) {
   const species = speciesOf(activeId);
+  const label = labels[activeId];
   const level = lvOf(days);
   const mood = moodOf(health);
   const color = colorOf(species.hue, health);
@@ -48,7 +52,8 @@ export function Tank({
         {species.names[level]}
       </p>
       <p className="mt-1 text-center text-sm italic text-paper/60">
-        {species.stage} · {days} day{days === 1 ? '' : 's'} logged
+        <EditableLabel key={activeId} species={activeId} label={label} /> · {days} day
+        {days === 1 ? '' : 's'} logged
       </p>
 
       <div className="mt-4 flex justify-center">
@@ -87,7 +92,7 @@ export function Tank({
       </div>
       <p className="mt-2 text-center text-xs text-paper/60">
         {next !== null
-          ? `${next - days} more ${species.stage} day${next - days === 1 ? '' : 's'} to ${nextName}`
+          ? `${next - days} more ${label} day${next - days === 1 ? '' : 's'} to ${nextName}`
           : 'Fully grown.'}
       </p>
 

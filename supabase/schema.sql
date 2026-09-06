@@ -47,12 +47,26 @@ create table public.push_subs (
   auth     text not null
 );
 
+-- Per-user display name for one of the 5 fixed creature slots — e.g. slot
+-- 'js' becomes "Spanish Grammar" instead of "Advanced JS". The 5 creatures
+-- themselves (art, hue, evolution names) stay fixed; only this label is
+-- user data. Deliberately not a free-form subjects table with its own
+-- id/count — check_in, sync_state, pets, and checkins all still operate on
+-- the same 5 hardcoded species ids, untouched by this table's existence.
+create table public.subjects (
+  user_id    uuid not null references auth.users on delete cascade,
+  species_id text not null check (species_id in ('js','fe','ai','be','alg')),
+  label      text not null,
+  primary key (user_id, species_id)
+);
+
 -- ---------- row level security ----------
 
 alter table public.pet_state  enable row level security;
 alter table public.pets       enable row level security;
 alter table public.checkins   enable row level security;
 alter table public.push_subs  enable row level security;
+alter table public.subjects   enable row level security;
 
 create policy "own state"  on public.pet_state
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -61,6 +75,8 @@ create policy "own pets"   on public.pets
 create policy "own checkins" on public.checkins
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own subs"   on public.push_subs
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own subjects" on public.subjects
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---------- functions ----------

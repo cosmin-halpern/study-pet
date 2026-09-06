@@ -1,7 +1,7 @@
 'use server';
 import { supabaseServer } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import type { SpeciesId } from '@/lib/creatures';
+import { SPECIES, type SpeciesId } from '@/lib/creatures';
 
 // Matches public.pet_state in supabase/schema.sql. Without a linked project,
 // there's no generated Database type for sb.rpc(...) to infer from, so this
@@ -30,13 +30,45 @@ export async function loadGame() {
   const { data: state } = (await sb.rpc('sync_state').single()) as { data: PetState | null };
   const { data: pets } = await sb.from('pets').select('*');
   const { data: today } = await sb.rpc('user_today', { p_user: user.id });
+  const { data: subjectRows } = await sb.from('subjects').select('species_id, label');
+
+  // Every species defaults to its built-in stage name until the user
+  // renames it — subjects only ever *overrides* the label, it never
+  // introduces a 6th slot or removes one of the 5.
+  const labels = Object.fromEntries(SPECIES.map((s) => [s.id, s.stage])) as Record<
+    SpeciesId,
+    string
+  >;
+  for (const row of subjectRows ?? []) {
+    labels[row.species_id as SpeciesId] = row.label;
+  }
 
   return {
     state,
     pets: pets ?? [],
     today: today as string,
     checkedInToday: state?.last_check === today,
+    labels,
   };
+}
+
+export async function saveSubjectLabel(species: SpeciesId, label: string) {
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return { ok: false, reason: 'not authenticated' };
+
+  const trimmed = label.trim();
+  if (!trimmed) return { ok: false, reason: 'label cannot be empty' };
+
+  const { error } = await sb
+    .from('subjects')
+    .upsert({ user_id: user.id, species_id: species, label: trimmed });
+
+  if (error) return { ok: false, reason: error.message };
+  revalidatePath('/');
+  return { ok: true };
 }
 
 export async function checkIn(species: SpeciesId) {

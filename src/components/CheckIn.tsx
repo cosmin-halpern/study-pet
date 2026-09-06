@@ -15,9 +15,11 @@ type CheckInResult = {
 export function CheckIn({
   disabled,
   caughtIds,
+  labels,
 }: {
   disabled: boolean;
   caughtIds: SpeciesId[];
+  labels: Record<SpeciesId, string>;
 }) {
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<SpeciesId | null>(null);
@@ -49,7 +51,7 @@ export function CheckIn({
     : pending
       ? '…'
       : selected
-        ? `Check in for ${speciesOf(selected).stage}`
+        ? `Check in for ${labels[selected]}`
         : 'Pick a subject first';
 
   return (
@@ -74,7 +76,7 @@ export function CheckIn({
                   : { borderColor: 'rgba(240,242,238,0.35)', color: '#F0F2EE' }
               }
             >
-              {s.stage}
+              {labels[s.id]}
               {!caught && ' ?'}
             </button>
           );
@@ -94,7 +96,7 @@ export function CheckIn({
       )}
       {result?.ok && (
         <p className="mt-2 text-center text-sm text-paper/70">
-          {speciesOf(result.species).stage} — day {result.days}.
+          {labels[result.species]} — day {result.days}.
         </p>
       )}
 

@@ -10,10 +10,12 @@ export function Roster({
   activeId,
   pets,
   health,
+  labels,
 }: {
   activeId: SpeciesId;
   pets: CaughtPet[];
   health: number;
+  labels: Record<SpeciesId, string>;
 }) {
   const [pending, startTransition] = useTransition();
   const byId = new Map(pets.map((p) => [p.species, p]));
@@ -45,7 +47,7 @@ export function Roster({
               <Pet species={s.id} level={level} face={caught ? 'happy' : 'flat'} color={color} size={44} />
               <span className="text-xs font-medium">{caught ? s.names[level] : '???'}</span>
               <span className="text-[10px] text-navy/50">
-                {caught ? `${pet.days} day${pet.days === 1 ? '' : 's'}` : s.stage}
+                {caught ? `${pet.days} day${pet.days === 1 ? '' : 's'}` : labels[s.id]}
               </span>
             </button>
           );

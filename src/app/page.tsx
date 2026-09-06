@@ -10,7 +10,7 @@ export default async function Home() {
   const game = await loadGame();
   if (!game) redirect('/login');
 
-  const { state, pets, today } = game;
+  const { state, pets, today, labels } = game;
   const activeId = state?.active ?? 'js';
   const activePet = pets.find((p) => p.species === activeId);
   const health = state?.health ?? 100;
@@ -25,8 +25,13 @@ export default async function Home() {
         health={health}
         today={today}
         lastCheck={state?.last_check ?? null}
+        labels={labels}
       >
-        <CheckIn disabled={game.checkedInToday} caughtIds={pets.map((p) => p.species)} />
+        <CheckIn
+          disabled={game.checkedInToday}
+          caughtIds={pets.map((p) => p.species)}
+          labels={labels}
+        />
       </Tank>
 
       <Stats
@@ -36,7 +41,7 @@ export default async function Home() {
         caught={pets.length}
       />
 
-      <Roster activeId={activeId} pets={pets} health={health} />
+      <Roster activeId={activeId} pets={pets} health={health} labels={labels} />
 
       <EnablePush />
     </main>
