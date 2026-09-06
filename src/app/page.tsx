@@ -9,6 +9,7 @@ import { EnablePush } from '@/components/EnablePush';
 export default async function Home() {
   const game = await loadGame();
   if (!game) redirect('/login');
+  if (!game.hasCustomSubjects) redirect('/onboarding');
 
   const { state, pets, today, labels } = game;
   const activeId = state?.active ?? 'js';

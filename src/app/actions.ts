@@ -49,7 +49,30 @@ export async function loadGame() {
     today: today as string,
     checkedInToday: state?.last_check === today,
     labels,
+    hasCustomSubjects: (subjectRows?.length ?? 0) > 0,
   };
+}
+
+// Bulk version of saveSubjectLabel, used once by the onboarding form so
+// naming all 5 subjects is one round trip instead of five.
+export async function completeOnboarding(labels: Record<SpeciesId, string>) {
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return { ok: false, reason: 'not authenticated' };
+
+  const rows = SPECIES.map((s) => ({
+    user_id: user.id,
+    species_id: s.id,
+    label: (labels[s.id] ?? s.stage).trim() || s.stage,
+  }));
+
+  const { error } = await sb.from('subjects').upsert(rows);
+
+  if (error) return { ok: false, reason: error.message };
+  revalidatePath('/');
+  return { ok: true };
 }
 
 export async function saveSubjectLabel(species: SpeciesId, label: string) {
