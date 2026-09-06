@@ -201,14 +201,18 @@ begin
   );
 end $$;
 
--- Everyone whose local clock reads 21:00 and hasn't checked in today.
--- Called hourly by the cron route; the hour filter means one cron schedule
--- covers every timezone without a per-region job.
+-- Everyone who hasn't checked in today, in their own timezone.
+--
+-- This used to also filter to s.tz local hour = 21, so one hourly cron
+-- could correctly nag every timezone at their own 9pm. Vercel Hobby only
+-- allows once-daily crons, so the cron route now fires once at a fixed UTC
+-- hour instead — the per-user hour filter would just make the notification
+-- fire on whatever day the cron's fixed UTC hour happens to land in each
+-- user's "today," so it's dropped here rather than kept and silently wrong.
 create or replace function public.users_needing_nag()
 returns table (user_id uuid, health int, streak int)
 language sql security definer set search_path = public as $$
   select s.user_id, s.health, s.streak
   from public.pet_state s
-  where s.last_check is distinct from (now() at time zone s.tz)::date
-    and extract(hour from (now() at time zone s.tz)) = 21;
+  where s.last_check is distinct from (now() at time zone s.tz)::date;
 $$;

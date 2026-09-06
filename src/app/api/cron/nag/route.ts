@@ -2,6 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 import { moodOf, MOOD_COPY } from '@/lib/creatures';
 
+// Vercel Hobby caps crons at once/day, so vercel.json fires this once at a
+// fixed UTC hour (18:00) rather than hourly with a per-user local-hour
+// filter in SQL. That lands at 21:00 in Europe/Bucharest during EEST
+// (summer) and 20:00 during EET (winter) — off by an hour half the year,
+// and wrong for anyone outside that timezone. Upgrading to Pro (or calling
+// this route hourly from an external scheduler like GitHub Actions) would
+// restore exact-local-9pm behavior for any timezone.
 export async function GET(req: Request) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('no', { status: 401 });
