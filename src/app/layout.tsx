@@ -15,6 +15,8 @@ const karla = Karla({
 export const metadata: Metadata = {
   title: "Study Pets",
   description: "A habit tracker for a self-directed programming curriculum.",
+  manifest: "/manifest.json",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Pets" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
